@@ -33,14 +33,13 @@ typedef struct ip_hdr {
 static struct mnl_socket *nl;
 time_t ip_last_modified = 0;
 char ip_data[64];
+char* ip_path = NULL;
 
 char* get_authorized_ip() {
-	const char* path = "/home/xxx/authorized_ip.txt";
-	
     struct stat file_stat;
-    int err = stat(path, &file_stat);
+    int err = stat(ip_path, &file_stat);
     if (err != 0) {
-        perror(" [file_is_modified] stat");
+        perror(" [get_authorized_ip] stat");
         exit(errno);
     }
     
@@ -48,7 +47,7 @@ char* get_authorized_ip() {
 		FILE* f;
 		
 		memset(ip_data, 0, 64);
-		f = fopen(path, "r");
+		f = fopen(ip_path, "r");
 		if (f) {
 			fread(ip_data, 64, 1, f);
 			fclose(f);
@@ -142,11 +141,12 @@ int main(int argc, char *argv[])
 	int ret;
 	unsigned int portid, queue_num;
 
-	if (argc != 2) {
-		printf("Usage: %s [queue_num]\n", argv[0]);
+	if (argc != 3) {
+		printf("Usage: %s [queue_num] [authorized_ip_file]\n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 	queue_num = atoi(argv[1]);
+	ip_path = argv[2];
 	get_authorized_ip();
 
 	nl = mnl_socket_open(NETLINK_NETFILTER);
